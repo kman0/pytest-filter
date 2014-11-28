@@ -17,7 +17,6 @@ setup(
     license='MIT',
     author='mk',
     author_email='manojklm@gmail.com',
-    py_modules=['pytest_filter'],
     entry_points={'pytest11': ['filter = pytest_filter']},
     zip_safe=False,
     include_package_data=True,
