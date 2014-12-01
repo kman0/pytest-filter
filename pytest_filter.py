@@ -95,6 +95,9 @@ def pytest_collection_modifyitems(session, config, items):
         #     if "skip" not in colitem.keywords:
         #         colitem.add_marker("skiif")
 
+    print("filter stats -- selected: %s, de-selected: %s, xfail: %s" % (
+        len(remaining), len(deselected), xfail_count))
+
     if deselected:
         config.hook.pytest_deselected(items=deselected)
         items[:] = remaining
