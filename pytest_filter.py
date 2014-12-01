@@ -86,6 +86,15 @@ def pytest_collection_modifyitems(session, config, items):
         else:
             remaining.append(colitem)
 
+        if 'xfail-node' in con.sections() and colitem.nodeid in nodes(con['xfail-node']):
+            if "xfail" not in colitem.keywords:
+                colitem.add_marker('xfail')
+                xfail_count += 1
+
+        # if 'skip-node' in con.sections() and colitem.nodeid in nodes(con['skip-node']):
+        #     if "skip" not in colitem.keywords:
+        #         colitem.add_marker("skiif")
+
     if deselected:
         config.hook.pytest_deselected(items=deselected)
         items[:] = remaining
