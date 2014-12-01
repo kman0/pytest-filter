@@ -9,7 +9,7 @@ PYPI_VERSION = '0.1'
 
 setup(
     name='pytest-filter',
-    description='filters/excludes tests using .pytest-filter files',
+    description='filters/excludes tests using .ini files',
     long_description=long_description,
     version=VERSION,
     url='https://github.com/manojklm/pytest-filter/',
