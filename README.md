@@ -21,8 +21,8 @@ The exclusion/inclusion of tests is based on node ids.
     - Tests that contain the mark are re-selected 
 6. include-node *(Entire node id is matched)*
     - Tests are re-selected for execution(must be excluded by one of the exclude section)
-6. skip-node *(Entire node id is matched)*
-    - Matching tests are skipped
+6. xfail-node *(Entire node id is matched)*
+    - Matching tests are marked as xfail (expected failure)
 
 .pytest-filter.ini contents
 ---------------------------
@@ -39,6 +39,6 @@ The exclusion/inclusion of tests is based on node ids.
 
 [include-node]
 
-[skip-node]
+[xfail-node]
 
 ```
