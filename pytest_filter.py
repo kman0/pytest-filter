@@ -53,10 +53,33 @@ def pytest_collection_modifyitems(session, config, items):
 
     for colitem in items:
         exclude_test = False
+        if 'exclude-prefix' in con.sections():
+            for prefix in nodes(con['exclude-prefix']):
+                if colitem.nodeid.startswith(prefix):
+                    exclude_test = True
+
+        if 'exclude-mark' in con.sections():
+            for mark in nodes(con['exclude-mark']):
+                if colitem.get_marker(mark):
+                    exclude_test = True
 
         if 'exclude-node' in con.sections():
             if colitem.nodeid in nodes(con['exclude-node']):
                 exclude_test = True
+
+        if 'include-prefix' in con.sections():
+            for prefix in nodes(con['include-prefix']):
+                if colitem.nodeid.startswith(prefix):
+                    exclude_test = False
+
+        if 'include-mark' in con.sections():
+            for mark in nodes(con['include-mark']):
+                if colitem.get_marker(mark):
+                    exclude_test = False
+
+        if 'include-node' in con.sections():
+            if colitem.nodeid in nodes(con['include-node']):
+                exclude_test = False
 
         if exclude_test:
             deselected.append(colitem)
