@@ -37,3 +37,33 @@ def pytest_unconfigure(config):
         del config._filter
         config.pluginmanager.unregister(_filter)
 
+
+def pytest_collection_modifyitems(session, config, items):
+    """ return custom item/collector for a python object in a module, or None.  """
+    if 'filter_file' not in config.inicfg:
+        return
+
+    remaining = []
+    deselected = []
+    con = configparser.ConfigParser(allow_no_value=True)
+    con.read(config._filter)
+
+    xfail_count = 0
+    nodes = lambda x: [k if v is None else k+':'+v for k, v in x.items()]
+
+    for colitem in items:
+        exclude_test = False
+
+        if 'exclude-node' in con.sections():
+            if colitem.nodeid in nodes(con['exclude-node']):
+                exclude_test = True
+
+        if exclude_test:
+            deselected.append(colitem)
+        else:
+            remaining.append(colitem)
+
+    if deselected:
+        config.hook.pytest_deselected(items=deselected)
+        items[:] = remaining
+
