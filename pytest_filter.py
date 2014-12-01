@@ -31,7 +31,7 @@ def pytest_configure(config):
 
 
 def pytest_unconfigure(config):
-    """un configure the mf_testlink framework plugin"""
+    """un configure the pytest_filter framework plugin"""
     _filter = getattr(config, '_filter', None)
     if _filter:
         del config._filter
