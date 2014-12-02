@@ -16,30 +16,37 @@ import configparser
 
 
 def pytest_addoption(parser):
+    parser.addoption(
+        '--no-filter', action="store_false", dest="filter", default=True,
+        help="disable pytest-filter"
+    )
     parser.addini('filter_file', 'Location of filter file')
+
+
+def pytest_report_header(config, startdir):
+    if not config.option.filter:
+        print('filter: disabled by --no-filter')
+    elif 'filter_file' in config.inicfg:
+        print('filter: %s' % config.inicfg['filter_file'])
+    else:
+        print('filter: "filter_file" key was not found in [pytest] section')
 
 
 @pytest.mark.trylast
 def pytest_configure(config):
+    if not config.option.filter:
+        return
     if 'filter_file' in config.inicfg:
         filter_path = Path(config.inicfg['filter_file'])
         if not filter_path.isfile():
             raise FileNotFoundError('filter_file: %s' % filter_path)
-
         config._filter = filter_path
-        config.pluginmanager.register(config._filter)
-
-
-def pytest_unconfigure(config):
-    """un configure the pytest_filter framework plugin"""
-    _filter = getattr(config, '_filter', None)
-    if _filter:
-        del config._filter
-        config.pluginmanager.unregister(_filter)
 
 
 def pytest_collection_modifyitems(session, config, items):
     """ return custom item/collector for a python object in a module, or None.  """
+    if not config.option.filter:
+        return
     if 'filter_file' not in config.inicfg:
         return
 
