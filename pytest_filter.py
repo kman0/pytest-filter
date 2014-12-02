@@ -56,36 +56,75 @@ def pytest_collection_modifyitems(session, config, items):
     con.read(config._filter)
 
     xfail_count = 0
-    nodes = lambda x: [k if v is None else k+':'+v for k, v in x.items()]
+
+    filter_map = {
+        'exclude-mark': set(),
+        'include-mark': set(),
+        'exclude-node': set(),
+        'include-node': set(),
+        'exclude-prefix': set(),
+        'include-prefix': set(),
+        'xfail-node': set()
+    }
+    # add marks
+    for section in ['exclude-mark', 'include-mark']:
+        filter_map[section] = set()
+        if section in con.sections():
+            for mark in con['exclude-mark']:
+                filter_map[section].add(mark.strip())
+
+    # add node ids
+    for section in ['exclude-node', 'include-node', 'exclude-prefix', 'include-prefix', 'xfail-node']:
+        filter_map[section] = set()
+        if section in con.sections():
+            for key, val in con[section].items():
+                if not val:
+                    filter_map[section] = key
+                else:
+                    for v in val.strip().split('\n'):
+                        if v.startswith('::'):
+                            deli = ""
+                        elif v.startswith(':'):
+                            deli = ":"
+                        else:
+                            deli = "::"
+                        filter_map[section].add(key + deli + v)
 
     for colitem in items:
+        # print(colitem.nodeid)
         exclude_test = False
-        if 'exclude-prefix' in con.sections():
-            for prefix in nodes(con['exclude-prefix']):
+        section = 'exclude-prefix'
+        if section in filter_map:
+            for prefix in filter_map[section]:
                 if colitem.nodeid.startswith(prefix):
                     exclude_test = True
 
-        if 'exclude-mark' in con.sections():
-            for mark in nodes(con['exclude-mark']):
+        section = 'exclude-mark'
+        if section in filter_map:
+            for mark in filter_map[section]:
                 if colitem.get_marker(mark):
                     exclude_test = True
 
-        if 'exclude-node' in con.sections():
-            if colitem.nodeid in nodes(con['exclude-node']):
+        section = 'exclude-node'
+        if section in filter_map:
+            if colitem.nodeid in filter_map[section]:
                 exclude_test = True
 
-        if 'include-prefix' in con.sections():
-            for prefix in nodes(con['include-prefix']):
+        section = 'include-prefix'
+        if section in filter_map:
+            for prefix in filter_map[section]:
                 if colitem.nodeid.startswith(prefix):
                     exclude_test = False
 
-        if 'include-mark' in con.sections():
-            for mark in nodes(con['include-mark']):
+        section = 'include-mark'
+        if section in filter_map:
+            for mark in filter_map[section]:
                 if colitem.get_marker(mark):
                     exclude_test = False
 
-        if 'include-node' in con.sections():
-            if colitem.nodeid in nodes(con['include-node']):
+        section = 'include-node'
+        if section in filter_map:
+            if colitem.nodeid in filter_map[section]:
                 exclude_test = False
 
         if exclude_test:
@@ -93,12 +132,16 @@ def pytest_collection_modifyitems(session, config, items):
         else:
             remaining.append(colitem)
 
-        if 'xfail-node' in con.sections() and colitem.nodeid in nodes(con['xfail-node']):
+        section = 'xfail-node'
+        if section in filter_map and colitem.nodeid in filter_map[section]:
             if "xfail" not in colitem.keywords:
                 colitem.add_marker('xfail')
                 xfail_count += 1
 
-        # if 'skip-node' in con.sections() and colitem.nodeid in nodes(con['skip-node']):
+        section = 'skip-node'
+        if section in filter_map and colitem.nodeid in filter_map[section]:
+            print('ERROR: skip-node is not yet implemented!')
+            pass
         #     if "skip" not in colitem.keywords:
         #         colitem.add_marker("skiif")
 
