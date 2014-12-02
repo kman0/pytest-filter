@@ -2,15 +2,16 @@ __author__ = 'M'
 from setuptools import setup
 import codecs
 
-long_description = codecs.open("README.md", encoding='utf-8').read()
-
-VERSION = '0.1'
+VERSION = '0.2dev'
 PYPI_VERSION = '0.1'
+DESCRIPTION = (
+    'filters/excludes tests using .ini files'
+)
 
 setup(
     name='pytest-filter',
-    description='filters/excludes tests using .ini files',
-    long_description=long_description,
+    description=DESCRIPTION,
+    long_description=DESCRIPTION,
     version=VERSION,
     url='https://github.com/manojklm/pytest-filter/',
     download_url='https://github.com/manojklm/pytest-filter/tarball/%s' % PYPI_VERSION,

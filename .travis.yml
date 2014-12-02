@@ -1,5 +1,6 @@
 language: python
 python:
+  - "2.6"
   - "2.7"
   - "3.2"
   - "3.3"
@@ -11,7 +12,8 @@ env:
 # command to install dependencies
 install:
   - "pip install pytest pyhamcrest pytest-cov"
+  - "pip install path.py"
   - "pip install ."
 
 # command to run tests
-script: "py.test"
+script: "py.test test_filter.py"
