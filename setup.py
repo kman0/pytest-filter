@@ -18,6 +18,7 @@ setup(
     author='mk',
     author_email='manojklm@gmail.com',
     entry_points={'pytest11': ['filter = pytest_filter']},
+    py_modules=['pytest_filter'],
     zip_safe=False,
     include_package_data=True,
     platforms='any',
