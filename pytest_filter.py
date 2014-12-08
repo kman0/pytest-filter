@@ -9,11 +9,13 @@ from __future__ import print_function
 
 import os
 import sys
-import time
-from path import Path
-import pytest
-import configparser
+if sys.version_info[0] < 3:
+    import ConfigParser as configparser
+else:
+    import configparser
 
+import pytest
+from path import Path
 
 def pytest_addoption(parser):
     parser.addoption(
