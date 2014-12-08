@@ -11,6 +11,7 @@ import os
 import sys
 if sys.version_info[0] < 3:
     import ConfigParser as configparser
+    configparser.ConfigParser = configparser.SafeConfigParser
 else:
     import configparser
 
