@@ -2,7 +2,7 @@ __author__ = 'M'
 from setuptools import setup
 import codecs
 
-VERSION = '0.2dev'
+VERSION = '0.3dev'
 PYPI_VERSION = '0.1'
 DESCRIPTION = (
     'filters/excludes tests using .ini files'

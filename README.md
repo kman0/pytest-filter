@@ -7,6 +7,17 @@ Note: The files are filtered after the collection of tests is complete.
 
 The exclusion/inclusion of tests is based on node ids.
 
+Command line options
+--------------------
+
+```
+
+--no-filter             # disables filter workflow
+
+--filter-exclude-all    # excludes all tests by default
+
+```
+
 
 ### Sections in .ini file *(in order of execution)*
 1. exclude-prefix *(Only prefix is matched)*
