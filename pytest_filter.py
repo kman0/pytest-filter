@@ -18,6 +18,7 @@ else:
 import pytest
 from path import Path
 
+
 def pytest_addoption(parser):
     parser.addoption(
         '--no-filter', action="store_false", dest="filter", default=True,
@@ -54,14 +55,9 @@ def pytest_collection_modifyitems(session, config, items):
     """ return custom item/collector for a python object in a module, or None.  """
     if not config.option.filter:
         return
-    if 'filter_file' not in config.inicfg:
-        return
 
     remaining = []
     deselected = []
-    con = configparser.ConfigParser(allow_no_value=True)
-    con.read(config._filter)
-
     xfail_count = 0
 
     filter_map = {
@@ -73,91 +69,96 @@ def pytest_collection_modifyitems(session, config, items):
         'include-prefix': set(),
         'xfail-node': set()
     }
-    # add marks
-    for section in ['exclude-mark', 'include-mark']:
-        filter_map[section] = set()
-        if section in con.sections():
-            for mark in con['exclude-mark']:
-                filter_map[section].add(mark.strip())
+    if config.option.filter_exclude_all:
+        config.hook.pytest_deselected(items=items)
+        items[:] = remaining
 
-    # add node ids
-    for section in ['exclude-node', 'include-node', 'exclude-prefix', 'include-prefix', 'xfail-node']:
-        filter_map[section] = set()
-        if section in con.sections():
-            for key, val in con[section].items():
-                if not val:
-                    filter_map[section] = key
-                else:
-                    for v in val.strip().split('\n'):
-                        if v.startswith('::'):
-                            deli = ""
-                        elif v.startswith(':'):
-                            deli = ":"
-                        else:
-                            deli = "::"
-                        filter_map[section].add(key + deli + v)
+    if 'filter_file' in config.inicfg:
+        con = configparser.ConfigParser(allow_no_value=True)
+        con.read(config._filter)
 
-    for colitem in items:
-        # print(colitem.nodeid)
-        # exclude all tests when config option is set
-        if config.option.filter_exclude_all:
-            exclude_test = True
-        else:
+        # add marks
+        for section in ['exclude-mark', 'include-mark']:
+            filter_map[section] = set()
+            if section in con.sections():
+                for mark in con['exclude-mark']:
+                    filter_map[section].add(mark.strip())
+
+        # add node ids
+        for section in ['exclude-node', 'include-node', 'exclude-prefix', 'include-prefix', 'xfail-node']:
+            filter_map[section] = set()
+            if section in con.sections():
+                for key, val in con[section].items():
+                    if not val:
+                        filter_map[section] = key
+                    else:
+                        for v in val.strip().split('\n'):
+                            if v.startswith('::'):
+                                deli = ""
+                            elif v.startswith(':'):
+                                deli = ":"
+                            else:
+                                deli = "::"
+                            filter_map[section].add(key + deli + v)
+
+        for colitem in items:
+            # print(colitem.nodeid)
+            # exclude all tests when config option is set
             exclude_test = False
-        section = 'exclude-prefix'
-        if section in filter_map:
-            for prefix in filter_map[section]:
-                if colitem.nodeid.startswith(prefix):
+            section = 'exclude-prefix'
+            if section in filter_map:
+                for prefix in filter_map[section]:
+                    if colitem.nodeid.startswith(prefix):
+                        exclude_test = True
+
+            section = 'exclude-mark'
+            if section in filter_map:
+                for mark in filter_map[section]:
+                    if colitem.get_marker(mark):
+                        exclude_test = True
+
+            section = 'exclude-node'
+            if section in filter_map:
+                if colitem.nodeid in filter_map[section]:
                     exclude_test = True
 
-        section = 'exclude-mark'
-        if section in filter_map:
-            for mark in filter_map[section]:
-                if colitem.get_marker(mark):
-                    exclude_test = True
+            section = 'include-prefix'
+            if section in filter_map:
+                for prefix in filter_map[section]:
+                    if colitem.nodeid.startswith(prefix):
+                        exclude_test = False
 
-        section = 'exclude-node'
-        if section in filter_map:
-            if colitem.nodeid in filter_map[section]:
-                exclude_test = True
+            section = 'include-mark'
+            if section in filter_map:
+                for mark in filter_map[section]:
+                    if colitem.get_marker(mark):
+                        exclude_test = False
 
-        section = 'include-prefix'
-        if section in filter_map:
-            for prefix in filter_map[section]:
-                if colitem.nodeid.startswith(prefix):
+            section = 'include-node'
+            if section in filter_map:
+                if colitem.nodeid in filter_map[section]:
                     exclude_test = False
 
-        section = 'include-mark'
-        if section in filter_map:
-            for mark in filter_map[section]:
-                if colitem.get_marker(mark):
-                    exclude_test = False
+            if exclude_test:
+                deselected.append(colitem)
+            else:
+                remaining.append(colitem)
 
-        section = 'include-node'
-        if section in filter_map:
-            if colitem.nodeid in filter_map[section]:
-                exclude_test = False
+            section = 'xfail-node'
+            if section in filter_map and colitem.nodeid in filter_map[section]:
+                if "xfail" not in colitem.keywords:
+                    colitem.add_marker('xfail')
+                    xfail_count += 1
 
-        if exclude_test:
-            deselected.append(colitem)
-        else:
-            remaining.append(colitem)
+            section = 'skip-node'
+            if section in filter_map and colitem.nodeid in filter_map[section]:
+                print('ERROR: skip-node is not yet implemented!')
+                pass
+            #     if "skip" not in colitem.keywords:
+            #         colitem.add_marker("skiif")
 
-        section = 'xfail-node'
-        if section in filter_map and colitem.nodeid in filter_map[section]:
-            if "xfail" not in colitem.keywords:
-                colitem.add_marker('xfail')
-                xfail_count += 1
-
-        section = 'skip-node'
-        if section in filter_map and colitem.nodeid in filter_map[section]:
-            print('ERROR: skip-node is not yet implemented!')
-            pass
-        #     if "skip" not in colitem.keywords:
-        #         colitem.add_marker("skiif")
-
-    print("filter stats -- selected: %s, de-selected: %s, xfail: %s" % (
-        len(remaining), len(deselected), xfail_count))
+        print("filter stats -- selected: %s, de-selected: %s, xfail: %s" % (
+            len(remaining), len(deselected), xfail_count))
 
     if deselected:
         config.hook.pytest_deselected(items=deselected)
