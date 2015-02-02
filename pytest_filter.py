@@ -38,8 +38,8 @@ def pytest_report_header(config, startdir):
         print('filter: %s' % config.inicfg['filter_file'])
     else:
         print('filter: "filter_file" key was not found in [pytest] section')
-    if not config.option.filter_exclude_all:
-        print('filter: all tests will be excluded before including any from filter file')
+    if config.option.filter_exclude_all:
+        print('filter-exclude-all: tests are excluded before processing items in filter file')
 
 
 @pytest.mark.trylast
