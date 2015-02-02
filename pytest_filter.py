@@ -73,6 +73,7 @@ def pytest_collection_modifyitems(session, config, items):
     }
     if config.option.filter_exclude_all:
         config.hook.pytest_deselected(items=items)
+        deselected.append(i for i in items)
         items[:] = remaining
 
     if 'filter_file' in config.inicfg:
