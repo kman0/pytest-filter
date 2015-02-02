@@ -23,6 +23,10 @@ def pytest_addoption(parser):
         '--no-filter', action="store_false", dest="filter", default=True,
         help="disable pytest-filter"
     )
+    parser.addoption(
+        '--filter-exclude-all', action="store_true", dest="filter_exclude_all", default=False,
+        help="Excludes all selected tests when true"
+    )
     parser.addini('filter_file', 'Location of filter file')
 
 
@@ -95,7 +99,11 @@ def pytest_collection_modifyitems(session, config, items):
 
     for colitem in items:
         # print(colitem.nodeid)
-        exclude_test = False
+        # exclude all tests when config option is set
+        if config.option.filter_exclude_all:
+            exclude_test = True
+        else:
+            exclude_test = False
         section = 'exclude-prefix'
         if section in filter_map:
             for prefix in filter_map[section]:
